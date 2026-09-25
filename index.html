@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ArcReady</title>
+<meta name="description" content="Check if a smart contract will behave correctly on Arc, Circle's USDC-native blockchain.">
+<style>
+  :root {
+    --bg: #f7f7f5; --panel: #ffffff; --text: #1b1b1a; --muted: #6b6a66; --line: #e4e2dc;
+    --accent: #2f5fd0; --accent-ink: #ffffff; --high: #b3261e; --high-bg: #fbeaea;
+    --med: #8a5a00; --med-bg: #fdf2dc; --low: #3d5a80; --low-bg: #e8eff8; --ok: #1e7a45; --ok-bg: #e5f4ea;
+    --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141413; --panel: #1d1d1b; --text: #eceae4; --muted: #a09e97; --line: #33322f;
+      --accent: #7aa2ff; --accent-ink: #0b1020; --high: #ff8a80; --high-bg: #3a1e1c;
+      --med: #f3c26b; --med-bg: #362a13; --low: #9cc0ff; --low-bg: #1c2638; --ok: #7ed6a0; --ok-bg: #173022;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, Segoe UI, sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 16px 64px; }
+  header h1 { font-size: 28px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  header p { margin: 0; color: var(--muted); }
+  .tabs { display: flex; gap: 4px; margin: 28px 0 16px; border-bottom: 1px solid var(--line); }
+  .tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 14px; font: inherit; color: var(--muted); cursor: pointer; }
+  .tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+  textarea, input { width: 100%; font: 14px/1.5 var(--mono); color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+  textarea { min-height: 220px; resize: vertical; }
+  .row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+  button.primary { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 8px; padding: 10px 16px; font: inherit; font-weight: 600; cursor: pointer; }
+  button.ghost { background: none; color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 10px 16px; font: inherit; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: default; }
+  .hint { color: var(--muted); font-size: 14px; }
+  .verdict { margin-top: 20px; padding: 14px 16px; border-radius: 10px; font-weight: 600; }
+  .verdict.ok { background: var(--ok-bg); color: var(--ok); }
+  .verdict.bad { background: var(--high-bg); color: var(--high); }
+  .verdict.warn { background: var(--med-bg); color: var(--med); }
+  .finding { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-top: 10px; }
+  .finding h3 { margin: 0 0 6px; font-size: 16px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  .sev { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+  .sev.high { background: var(--high-bg); color: var(--high); }
+  .sev.medium { background: var(--med-bg); color: var(--med); }
+  .sev.low { background: var(--low-bg); color: var(--low); }
+  .finding code { font-family: var(--mono); font-size: 13px; background: var(--bg); padding: 2px 6px; border-radius: 4px; overflow-wrap: anywhere; }
+  .finding p { margin: 6px 0 0; }
+  .finding a { color: var(--accent); }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-top: 12px; }
+  .stat { background: var(--bg); border-radius: 10px; padding: 14px; }
+  .stat b { display: block; font-size: 26px; line-height: 1.2; }
+  .stat span { color: var(--muted); font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+  td code { font-family: var(--mono); font-size: 13px; }
+  footer { margin-top: 32px; color: var(--muted); font-size: 14px; }
+  footer a { color: var(--accent); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>ArcReady</h1>
+    <p>Will your contract behave correctly on Arc? Arc runs Ethereum code, but USDC is its native money, and a few things quietly work differently. ArcReady automates Circle's porting checklist.</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="source">Check source code</button>
+    <button role="tab" aria-selected="false" data-tab="address">Check a live contract</button>
+    <button role="tab" aria-selected="false" data-tab="report">State of Arc</button>
+  </div>
+
+  <section id="tab-source" class="panel">
+    <label for="src" class="hint">Paste Solidity. It never leaves your browser.</label>
+    <textarea id="src" spellcheck="false" placeholder="pragma solidity ^0.8.24;&#10;contract Raffle { ... }"></textarea>
+    <div class="row">
+      <button class="primary" id="run-source">Check code</button>
+      <button class="ghost" id="example">Try an example</button>
+    </div>
+    <div id="out-source"></div>
+  </section>
+
+  <section id="tab-address" class="panel" hidden>
+    <label for="addr" class="hint">Contract address on Arc mainnet. Checked on-chain by the ArcReady oracle contract.</label>
+    <input id="addr" spellcheck="false" placeholder="0x…">
+    <div class="row">
+      <button class="primary" id="run-address">Check contract</button>
+      <button class="ghost" id="attest" hidden>Record result on Arc</button>
+      <span class="hint" id="net"></span>
+    </div>
+    <div id="out-address"></div>
+  </section>
+
+  <section id="tab-report" class="panel" hidden>
+    <div id="out-report"><p class="hint">Loading…</p></div>
+  </section>
+
+  <footer>
+    Rules follow Circle's docs: <a href="https://docs.arc.io/arc/references/evm-differences">EVM differences</a> and
+    <a href="https://docs.arc.io/arc/tutorials/porting-contracts-to-arc">Port a contract to Arc</a>.
+    Open source. Not an audit: a clean result means none of the known Arc differences were found.
+  </footer>
+</main>
+<script type="module" src="app.js"></script>
+</body>
+</html>
