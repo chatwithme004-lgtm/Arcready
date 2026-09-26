@@ -150,7 +150,7 @@ async function loadReport() {
       <div class="stats">
         <div class="stat"><b>${r.contracts.toLocaleString()}</b><span>active contracts scanned</span></div>
         <div class="stat"><b>${r.flagged.toLocaleString()}</b><span>use something that behaves differently on Arc (${pct(r.flagged)})</span></div>
-        <div class="stat"><b>${r.byRule['ARC-001'] || 0}</b><span>rely on randomness that is always 0</span></div>
+        <div class="stat"><b>${r.byRule['ARC-001'] || 0}</b><span>read randomness (PREVRANDAO) that is always 0 on Arc</span></div>
         <div class="stat"><b>${r.delegated.toLocaleString()}</b><span>wallets using EIP-7702 delegation</span></div>
       </div>
       <table><thead><tr><th>Check</th><th>Contracts</th></tr></thead><tbody>
