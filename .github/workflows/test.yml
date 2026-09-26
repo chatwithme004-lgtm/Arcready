@@ -1,0 +1,22 @@
+name: test
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: node scripts/compile.cjs
+      - run: npm test
+      - name: Oracle agrees with the JS checker on a local chain
+        run: |
+          npx hardhat node --config hardhat.config.cjs > /tmp/node.log 2>&1 &
+          for i in $(seq 1 30); do curl -s -o /dev/null http://127.0.0.1:8545 && break; sleep 1; done
+          node --test test/oracle.test.js
+      - name: ArcReady on its own examples
+        run: |
+          node bin/arcready.js examples/Counter.sol
+          ! node bin/arcready.js examples/Raffle.sol

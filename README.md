@@ -64,7 +64,37 @@ Source checks add what bytecode can't show: `msg.value` (18 decimals) mixed with
 `0xEeee…` native sentinel aliased to USDC, unchecked `.send`, value sent to `address(0)`, and
 USDC treated as 18 decimals.
 
-## Run it
+## Use it
+
+**In the browser:** the web app (`web/`). Paste source, or enter a contract address on Arc.
+
+**In a terminal:**
+
+```sh
+npx github:chatwithme004-lgtm/ArcReady contracts/        # check a folder of .sol files
+npx github:chatwithme004-lgtm/ArcReady 0xYourContract    # check a deployed contract on Arc
+```
+
+Exit code 1 when a finding at or above `--fail-on` (default `high`) exists. `--json` for machine output.
+If the contract is verified on [Sourcify](https://sourcify.dev), the full source checklist runs as well.
+
+**In CI**, on every push:
+
+```yaml
+- uses: actions/checkout@v4
+- uses: chatwithme004-lgtm/ArcReady@main
+  with:
+    path: contracts
+```
+
+**From another contract:**
+
+```solidity
+(bool ready, uint256 flags, ) = IArcReadyOracle(ORACLE).scan(target);
+require(ready, "target behaves differently on Arc");
+```
+
+## Develop
 
 ```sh
 npm install
@@ -80,6 +110,9 @@ The web app is static (`web/`): serve the folder and open it. Add `?net=local` t
 
 ```
 contracts/ArcReadyOracle.sol   on-chain checker + attestations
+bin/arcready.js                command-line checker
+action.yml                     GitHub Action
+examples/                      a contract with Arc issues and a clean one
 src/bytecode.js                bytecode walker (Node)
 src/source.js                  Solidity source rules
 src/rules.js                   rule texts shared with the web app

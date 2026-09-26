@@ -1,0 +1,20 @@
+name: ArcReady
+description: Fail the build when Solidity code relies on behaviour that differs on Arc (Circle's USDC-native chain).
+branding:
+  icon: check-circle
+  color: blue
+inputs:
+  path:
+    description: Files or folders to check
+    default: contracts
+  fail-on:
+    description: Lowest severity that fails the build (high, medium or low)
+    default: high
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+    - shell: bash
+      run: node "$GITHUB_ACTION_PATH/bin/arcready.js" ${{ inputs.path }} --fail-on=${{ inputs.fail-on }}

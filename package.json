@@ -17,5 +17,8 @@
   },
   "devDependencies": {
     "hardhat": "^2.29.1"
+  },
+  "bin": {
+    "arcready": "bin/arcready.js"
   }
 }
