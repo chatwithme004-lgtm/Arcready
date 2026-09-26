@@ -10,15 +10,24 @@
   "author": "",
   "license": "MIT",
   "type": "module",
-  "dependencies": {
+  "devDependencies": {
+    "hardhat": "^2.29.1",
     "dotenv": "^18.0.3",
     "solc": "^0.8.37",
     "viem": "^2.56.9"
   },
-  "devDependencies": {
-    "hardhat": "^2.29.1"
-  },
   "bin": {
     "arcready": "bin/arcready.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "contracts",
+    "action.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
   }
 }
