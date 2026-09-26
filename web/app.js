@@ -41,6 +41,7 @@ function renderFindings(findings, where) {
       <h3><span class="sev ${f.severity}">${f.severity}</span>${esc(f.title)}</h3>
       ${f.line ? `<code>line ${f.line}: ${esc(f.evidence)}</code>` : f.evidence ? `<code>${esc(f.evidence)}</code>` : ''}
       <p>${esc(f.fix)} <a href="${f.doc}" target="_blank" rel="noopener">Circle docs</a></p>
+      ${f.patch ? `<details><summary>Suggested fix</summary><pre>${esc(f.patch)}</pre></details>` : ''}
     </div>`).join('');
 }
 
@@ -97,13 +98,29 @@ $('run-address').onclick = async () => {
     const note = attested
       ? current ? 'A result for this code is already recorded on Arc.' : 'A result was recorded, but the code has changed since.'
       : 'Not recorded on Arc yet.';
-    out.innerHTML = renderFindings(findings, '') + `<p class="hint">${Number(size).toLocaleString()} bytes of code checked by the oracle contract. ${note}${ready ? '' : ' Bytecode checks only: paste the source for the full checklist.'}</p>`;
+    out.innerHTML = renderFindings(findings, '') + `<p class="hint">${Number(size).toLocaleString()} bytes of code checked by the oracle contract. ${note}</p><div id="out-sourcify"><p class="hint">Looking for verified source on Sourcify…</p></div>`;
     lastAddr = addr;
     $('attest').hidden = !window.ethereum;
+    sourcify(addr);
   } catch (e) {
     out.innerHTML = `<p class="hint">Couldn't reach ${esc(net.name)}: ${esc(e.shortMessage || e.message)}</p>`;
   }
 };
+
+// Verified source from Sourcify (it indexes Arc) lets us run the full source checklist too.
+async function sourcify(addr) {
+  const box = $('out-sourcify');
+  try {
+    const r = await fetch(`https://sourcify.dev/server/v2/contract/${net.id}/${addr}?fields=sources,compilation`);
+    if (!r.ok) { box.innerHTML = '<p class="hint">No verified source on Sourcify, so bytecode checks only. Paste the source in the first tab for the full checklist.</p>'; return; }
+    const d = await r.json();
+    const own = Object.entries(d.sources || {}).filter(([p]) => !/node_modules|@openzeppelin|forge-std|\/lib\//.test(p));
+    const findings = own.flatMap(([path, f]) => checkSource(f.content).map((x) => ({ ...x, evidence: `${path.split('/').pop()}:${x.line}  ${x.evidence}`, line: null })));
+    box.innerHTML = `<h3 style="margin:20px 0 0;font-size:16px">Verified source: ${esc(d.compilation?.name || 'contract')} (${own.length} file${own.length === 1 ? '' : 's'})</h3>` + renderFindings(findings, 'The full source checklist passed.');
+  } catch {
+    box.innerHTML = '<p class="hint">Couldn\'t reach Sourcify.</p>';
+  }
+}
 
 $('attest').onclick = async () => {
   const out = $('out-address');

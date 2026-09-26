@@ -84,3 +84,21 @@ test('bytecode: opcodes after a halt are skipped until the next JUMPDEST', () =>
   assert.ok(walk('0x005b44').opcodes.has('PREVRANDAO')); // STOP, JUMPDEST, PREVRANDAO
   assert.ok(walk('0x44').opcodes.has('PREVRANDAO'));
 });
+
+test('source: a contract\'s own balanceOf (ERC-721/20) is not USDC', () => {
+  const nft = `contract Nft {
+    mapping(address => uint256) _b;
+    function balanceOf(address a) public view returns (uint256) { return _b[a]; }
+    function mint() external payable { require(msg.value == 1 ether); _b[msg.sender]++; }
+    function sweep() external { payable(msg.sender).transfer(address(this).balance); }
+  }`;
+  const ids = checkSource(nft).map((f) => f.id);
+  assert.ok(!ids.includes('ARC-006'));
+  assert.ok(!ids.includes('ARC-007'));
+});
+
+test('source: one finding per rule per line', () => {
+  const src = 'contract A { function f() external payable { if (msg.value != 1) revert(); x.balanceOf(msg.value == 2 ? a : b); } }';
+  const lines = checkSource(src).filter((f) => f.id === 'ARC-006').map((f) => f.line);
+  assert.equal(lines.length, new Set(lines).size);
+});
