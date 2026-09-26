@@ -76,3 +76,16 @@ test('attest stores result tied to code hash', async () => {
   assert.deepEqual([attested, ready, current, flags], [true, false, true, 3n]);
   console.log('attest gas used:', r.gasUsed);
 });
+
+test('oracle agrees with JS checker on real Arc bytecode (old compiler data section, Multicall3)', async () => {
+  const testClient = createTestClient({ chain: hardhat, mode: 'hardhat', transport: http() });
+  for (const [file, expected] of [['uniswap-v2-pair.hex', 0n], ['multicall3.hex', 1n]]) {
+    const code = fs.readFileSync(new URL(`./fixtures/${file}`, import.meta.url), 'utf8').trim();
+    const addr = '0x' + Buffer.from(file).toString('hex').padEnd(40, '0').slice(0, 40);
+    await testClient.setCode({ address: addr, bytecode: code });
+    const [, flags] = await read('scan', [addr]);
+    const jsFlags = checkBytecode(code).findings.map((f) => BIT[f.id]).reduce((a, b) => a | b, 0n);
+    assert.equal(flags, jsFlags, file);
+    assert.equal(flags & 1n, expected, file);
+  }
+});

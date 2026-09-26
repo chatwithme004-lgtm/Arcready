@@ -1,0 +1,16 @@
+{
+  "from": "16 Sep 2026",
+  "to": "25 Sep 2026",
+  "samples": 2500,
+  "firstBlock": 21068653,
+  "lastBlock": 22695502,
+  "contracts": 9572,
+  "flagged": 52,
+  "delegated": 201,
+  "byRule": {
+    "ARC-004": 6,
+    "ARC-003": 6,
+    "ARC-001": 36,
+    "ARC-002": 11
+  }
+}

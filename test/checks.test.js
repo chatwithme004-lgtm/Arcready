@@ -64,3 +64,23 @@ test('bytecode: 0x44 inside PUSH data is not an opcode', () => {
   assert.equal(walk('0x6044').opcodes.size, 0); // PUSH1 0x44
   assert.ok(walk('0x44').opcodes.has('PREVRANDAO'));
 });
+
+test('bytecode: revert strings stored after the code are data, not opcodes', async () => {
+  const fs = await import('node:fs');
+  // Solidity 0.5 Uniswap V2 pair from Arc mainnet: "…LIQUIDITY_BURNED" contains 0x44 ("D").
+  const pair = fs.readFileSync(new URL('./fixtures/uniswap-v2-pair.hex', import.meta.url), 'utf8');
+  assert.deepEqual(checkBytecode(pair).findings, []);
+});
+
+test('bytecode: Multicall3 really reads PREVRANDAO (getCurrentBlockDifficulty)', async () => {
+  const fs = await import('node:fs');
+  const mc = fs.readFileSync(new URL('./fixtures/multicall3.hex', import.meta.url), 'utf8');
+  assert.ok(checkBytecode(mc).findings.some((f) => f.id === 'ARC-001'));
+});
+
+test('bytecode: opcodes after a halt are skipped until the next JUMPDEST', () => {
+  assert.equal(walk('0x0044').opcodes.size, 0); // STOP, then data
+  assert.equal(walk('0xfe44ff').opcodes.size, 0); // INVALID, then data
+  assert.ok(walk('0x005b44').opcodes.has('PREVRANDAO')); // STOP, JUMPDEST, PREVRANDAO
+  assert.ok(walk('0x44').opcodes.has('PREVRANDAO'));
+});

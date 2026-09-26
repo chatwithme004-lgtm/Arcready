@@ -76,9 +76,17 @@ contract ArcReadyOracle {
         return head == 0xa1 || head == 0xa2 ? cut : n;
     }
 
+    // After a halting opcode, execution can only resume at a JUMPDEST; bytes in between are data
+    // (older compilers store revert strings there), so they are skipped.
     function _walk(bytes memory code, uint256 end) private pure returns (uint256 flags) {
+        bool live = true;
         for (uint256 i = 0; i < end; ) {
             uint8 op = uint8(code[i]);
+            if (!live) {
+                if (op == 0x5b) live = true;
+                unchecked { ++i; }
+                continue;
+            }
             if (op >= 0x60 && op <= 0x7f) {
                 uint256 n = op - 0x5f;
                 // Compilers push this address as PUSH19 because its first byte is zero.
@@ -91,6 +99,7 @@ contract ArcReadyOracle {
             else if (op == 0xff) flags |= SELFDESTRUCT;
             else if (op == 0x49) flags |= BLOBHASH;
             else if (op == 0x4a) flags |= BLOBBASEFEE;
+            if (op == 0x00 || op == 0x56 || op == 0xf3 || op == 0xfd || op == 0xfe || op == 0xff) live = false;
             unchecked { ++i; }
         }
     }

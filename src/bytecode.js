@@ -16,14 +16,24 @@ const OPCODES = {
 };
 
 
+// After STOP / JUMP / RETURN / REVERT / INVALID / SELFDESTRUCT, execution can only resume at a
+// JUMPDEST. Bytes in between are data (older compilers put revert strings there), so skip them.
+const HALTS = new Set([0x00, 0x56, 0xf3, 0xfd, 0xfe, 0xff]);
+const JUMPDEST = 0x5b;
+
 /** Returns { opcodes: Set<string>, beaconRoots: boolean, size: number } for hex bytecode. */
 export function walk(code) {
   const hex = code.startsWith('0x') ? code.slice(2) : code;
   const bytes = Buffer.from(hex, 'hex');
   const found = new Set();
   let beaconRoots = false;
+  let live = true;
   for (let i = 0; i < bytes.length; i++) {
     const op = bytes[i];
+    if (!live) {
+      if (op === JUMPDEST) live = true;
+      continue;
+    }
     if (op >= 0x60 && op <= 0x7f) {
       const n = op - 0x5f;
       const pushed = bytes.subarray(i + 1, i + 1 + n).toString('hex');
@@ -32,6 +42,7 @@ export function walk(code) {
       continue;
     }
     if (OPCODES[op]) found.add(OPCODES[op]);
+    if (HALTS.has(op)) live = false;
   }
   return { opcodes: found, beaconRoots, size: bytes.length };
 }
