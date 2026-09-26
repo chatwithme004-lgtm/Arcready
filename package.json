@@ -1,14 +1,14 @@
 {
   "name": "arcready",
   "version": "1.0.0",
-  "description": "",
+  "description": "Checks whether a contract behaves correctly on Arc, Circle's USDC-native chain",
   "main": "index.js",
   "scripts": {
     "test": "node --test test/checks.test.js"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "type": "module",
   "dependencies": {
     "dotenv": "^18.0.3",
