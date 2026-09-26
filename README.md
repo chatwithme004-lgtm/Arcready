@@ -1,5 +1,7 @@
 # ArcReady
 
+**Try it: [chatwithme004-lgtm.github.io/Arcready](https://chatwithme004-lgtm.github.io/Arcready/)**
+
 **Will your contract behave correctly on Arc?** ArcReady checks Solidity source and deployed
 bytecode against the ways Arc differs from Ethereum, and records the result on-chain.
 
@@ -71,8 +73,8 @@ USDC treated as 18 decimals.
 **In a terminal:**
 
 ```sh
-npx github:chatwithme004-lgtm/ArcReady contracts/        # check a folder of .sol files
-npx github:chatwithme004-lgtm/ArcReady 0xYourContract    # check a deployed contract on Arc
+npx github:chatwithme004-lgtm/Arcready contracts/        # check a folder of .sol files
+npx github:chatwithme004-lgtm/Arcready 0xYourContract    # check a deployed contract on Arc
 ```
 
 Exit code 1 when a finding at or above `--fail-on` (default `high`) exists. `--json` for machine output.
@@ -82,7 +84,7 @@ If the contract is verified on [Sourcify](https://sourcify.dev), the full source
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: chatwithme004-lgtm/ArcReady@main
+- uses: chatwithme004-lgtm/Arcready@main
   with:
     path: contracts
 ```
